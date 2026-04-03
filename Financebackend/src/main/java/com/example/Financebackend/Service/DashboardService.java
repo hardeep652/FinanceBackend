@@ -1,14 +1,13 @@
 package com.example.Financebackend.Service;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.Financebackend.Config.JwtFilter;
 import com.example.Financebackend.DTO.CategoryBreakdownResponse;
 import com.example.Financebackend.DTO.DashboardSummaryResponse;
 import com.example.Financebackend.Model.FinancialRecord;
@@ -28,16 +27,22 @@ public class DashboardService {
     private UserRepository userRepository;
 
     private User getCurrentUser() {
-        return userRepository.findById(1L).get();
+        String email = JwtFilter.currentUserEmail.get();
+
+        if (email == null) {
+            throw new RuntimeException("UNAUTHORIZED: Please provide valid token");
+        }
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("NOT_FOUND: User not found"));
     }
 
     private void validateActive(User user) {
         if (user.getStatus() == Status.INACTIVE) {
-            throw new RuntimeException("User inactive");
+            throw new RuntimeException("FORBIDDEN: User is inactive");
         }
     }
 
-    // 🔥 1. SUMMARY API
     public DashboardSummaryResponse getSummary() {
 
         User currentUser = getCurrentUser();
@@ -61,7 +66,6 @@ public class DashboardService {
         return new DashboardSummaryResponse(totalIncome, totalExpense, netBalance);
     }
 
-    // 🔥 2. CATEGORY BREAKDOWN
     public List<CategoryBreakdownResponse> getCategoryBreakdown() {
 
         User currentUser = getCurrentUser();
@@ -73,10 +77,9 @@ public class DashboardService {
 
         for (FinancialRecord record : records) {
             categoryMap.put(
-                record.getCategory(),
-                categoryMap.getOrDefault(record.getCategory(), BigDecimal.ZERO)
-                        .add(record.getAmount())
-            );
+                    record.getCategory(),
+                    categoryMap.getOrDefault(record.getCategory(), BigDecimal.ZERO)
+                            .add(record.getAmount()));
         }
 
         return categoryMap.entrySet().stream()
@@ -84,7 +87,6 @@ public class DashboardService {
                 .collect(Collectors.toList());
     }
 
-    // 🔥 3. RECENT ACTIVITY
     public List<FinancialRecord> getRecent() {
 
         User currentUser = getCurrentUser();

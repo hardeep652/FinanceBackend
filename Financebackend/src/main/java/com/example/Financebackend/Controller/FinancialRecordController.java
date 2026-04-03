@@ -1,9 +1,10 @@
 package com.example.Financebackend.Controller;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,16 +35,19 @@ public class FinancialRecordController {
         return service.create(request);
     }
 
-    @GetMapping
-    public List<FinancialRecord> getAll(
-            @RequestParam(required = false) RecordType type,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate) {
+   @GetMapping
+public ResponseEntity<Page<FinancialRecord>> getAll(
+        @RequestParam(required = false) RecordType type,
+        @RequestParam(required = false) String category,
+        @RequestParam(required = false) LocalDate startDate,
+        @RequestParam(required = false) LocalDate endDate,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "5") int size) {
 
-        return service.filter(type, category, startDate, endDate);
-    }
-
+    return ResponseEntity.ok(
+            service.filter(type, category, startDate, endDate, page, size)
+    );
+}
     @PutMapping("/{id}")
     public FinancialRecord update(
             @PathVariable Long id,

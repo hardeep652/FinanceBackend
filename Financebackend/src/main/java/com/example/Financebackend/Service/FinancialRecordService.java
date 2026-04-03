@@ -2,11 +2,14 @@ package com.example.Financebackend.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.example.Financebackend.Config.JwtFilter;
 import com.example.Financebackend.DTO.CreateRecordRequest;
 import com.example.Financebackend.DTO.UpdateRecordRequest;
 import com.example.Financebackend.Model.FinancialRecord;
@@ -27,22 +30,28 @@ public class FinancialRecordService {
     private UserRepository userRepository;
 
     private User getCurrentUser() {
-        return userRepository.findById(1L).get();
+        String email = JwtFilter.currentUserEmail.get();
+
+        if (email == null) {
+            throw new RuntimeException("UNAUTHORIZED: Please provide valid token");
+        }
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("NOT_FOUND: User not found"));
     }
 
     private void validateActive(User user) {
         if (user.getStatus() == Status.INACTIVE) {
-            throw new RuntimeException("User inactive");
+            throw new RuntimeException("FORBIDDEN: User is inactive");
         }
     }
 
     private void validateAdmin(User user) {
         if (user.getRole() != Role.ADMIN) {
-            throw new RuntimeException("Only admin allowed");
+            throw new RuntimeException("FORBIDDEN: Only admin can perform this action");
         }
     }
 
-    // CREATE
     public FinancialRecord create(CreateRecordRequest request) {
 
         User currentUser = getCurrentUser();
@@ -61,16 +70,16 @@ public class FinancialRecordService {
         return recordRepository.save(record);
     }
 
-    // GET ALL
-    public List<FinancialRecord> getAll() {
+    public Page<FinancialRecord> getAll(int page, int size) {
 
         User currentUser = getCurrentUser();
         validateActive(currentUser);
 
-        return recordRepository.findAll();
+        Pageable pageable = PageRequest.of(page, size);
+
+        return recordRepository.findByCreatedBy(currentUser, pageable);
     }
 
-    // UPDATE
     public FinancialRecord update(Long id, UpdateRecordRequest request) {
 
         User currentUser = getCurrentUser();
@@ -78,7 +87,7 @@ public class FinancialRecordService {
         validateAdmin(currentUser);
 
         FinancialRecord record = recordRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Record not found"));
+                .orElseThrow(() -> new RuntimeException("NOT_FOUND: Record not found"));
 
         if (request.getAmount() != null)
             record.setAmount(request.getAmount());
@@ -98,35 +107,44 @@ public class FinancialRecordService {
         return recordRepository.save(record);
     }
 
-    // DELETE
     public void delete(Long id) {
 
         User currentUser = getCurrentUser();
         validateActive(currentUser);
         validateAdmin(currentUser);
 
+        if (!recordRepository.existsById(id)) {
+            throw new RuntimeException("NOT_FOUND: Record not found");
+        }
+
         recordRepository.deleteById(id);
     }
 
-    // FILTER
-    public List<FinancialRecord> filter(
-            RecordType type,
-            String category,
-            LocalDate startDate,
-            LocalDate endDate) {
+   public Page<FinancialRecord> filter(
+        RecordType type,
+        String category,
+        LocalDate startDate,
+        LocalDate endDate,
+        int page,
+        int size) {
 
-        if (type != null) {
-            return recordRepository.findByType(type);
-        }
+    User currentUser = getCurrentUser();
+    validateActive(currentUser);
 
-        if (category != null) {
-            return recordRepository.findByCategory(category);
-        }
+    Pageable pageable = PageRequest.of(page, size);
 
-        if (startDate != null && endDate != null) {
-            return recordRepository.findByDateBetween(startDate, endDate);
-        }
-
-        return recordRepository.findAll();
+    if (type != null) {
+        return recordRepository.findByCreatedByAndType(currentUser, type, pageable);
     }
+
+    if (category != null) {
+        return recordRepository.findByCreatedByAndCategory(currentUser, category, pageable);
+    }
+
+    if (startDate != null && endDate != null) {
+        return recordRepository.findByCreatedByAndDateBetween(currentUser, startDate, endDate, pageable);
+    }
+
+    return recordRepository.findByCreatedBy(currentUser, pageable);
+}
 }
