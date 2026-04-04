@@ -1,4 +1,4 @@
-# 💰 Finance Backend System (Zorvyn Assignment)
+i# 💰 Finance Backend System (Zorvyn Assignment)
 
 ## 📌 Overview
 
@@ -188,15 +188,61 @@ Authorization: Bearer <JWT_TOKEN>
 
 ## 👤 Default Admin
 
-A default admin user is auto-created at startup:
+A default admin user is auto-created at startup
 
+---
+
+## 📥 Sample JSON Requests
+
+### 🔐 Login
+**Endpoint:** `POST /api/auth/login`
+**Request Body:**
 ```json
 {
   "email": "admin@example.com"
 }
 ```
 
----
+### 👤 Create User (ADMIN)
+**Endpoint:** `POST /api/users/create`
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "role": "ANALYST",
+  "status": "ACTIVE"
+}
+```
+
+### 💰 Create Financial Record (ADMIN)
+**Endpoint:** `POST /api/records`
+**Request Body:**
+```json
+{
+  "amount": 5000,
+  "type": "INCOME",
+  "category": "Salary",
+  "date": "2026-04-01",
+  "notes": "Monthly salary"
+}
+```
+
+### ✏️ Update Financial Record (ADMIN)
+**Endpoint:** `PUT /api/records/{id}`
+**Request Body:**
+```json
+{
+  "amount": 6000,
+  "category": "Updated Salary"
+}
+```
+
+### 🔍 Filter Records
+- By Type: `GET /api/records?type=INCOME`
+- By Category: `GET /api/records?category=Food`
+- By Date Range: `GET /api/records?startDate=2026-04-01&endDate=2026-04-30`
+'text' } }] } }]} />]]>
 
 ## 🧠 Design Decisions
 
