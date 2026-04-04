@@ -99,7 +99,7 @@ The system is built using **Spring Boot**, follows clean architecture principles
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/FinanceBackend.git
+git clone https://github.com/hardeep652/FinanceBackend.git
 cd Financebackend
 ```
 
