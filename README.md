@@ -215,6 +215,26 @@ A default admin user is auto-created at startup
 }
 ```
 
+###Get All Users(ADMIN)
+**Endpoint**: `GET api/users`
+
+###UPDATE USER Role(ADMIN)
+**Endpoint**:`PUT/api/users/{id}/role
+```json
+{
+  "role":"VIEWER"
+}
+```
+
+###UPDATE USER Status
+**Endpoint**:`PUT/api/users/{id}/status
+```json
+{
+  "status":"INACTIVE"
+}
+```
+
+
 ### 💰 Create Financial Record (ADMIN)
 **Endpoint:** `POST /api/records`
 **Request Body:**
@@ -238,11 +258,14 @@ A default admin user is auto-created at startup
 }
 ```
 
+###GET Records(ADMIN,ANALYST)
+**Endpoint**:GET/api/records?page=0&size=5
+
 ### 🔍 Filter Records
 - By Type: `GET /api/records?type=INCOME`
 - By Category: `GET /api/records?category=Food`
 - By Date Range: `GET /api/records?startDate=2026-04-01&endDate=2026-04-30`
-'text' } }] } }]} />]]>
+
 
 ## 🧠 Design Decisions
 
